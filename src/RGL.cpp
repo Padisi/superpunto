@@ -2,16 +2,16 @@
 
 namespace superpunto{
   const char * GetGLErrorStr(GLenum err){
-    switch (err){                                           
-    case GL_NO_ERROR:          return "No error";         
-    case GL_INVALID_ENUM:      return "Invalid enum";     
-    case GL_INVALID_VALUE:     return "Invalid value";    
+    switch (err){
+    case GL_NO_ERROR:          return "No error";
+    case GL_INVALID_ENUM:      return "Invalid enum";
+    case GL_INVALID_VALUE:     return "Invalid value";
     case GL_INVALID_OPERATION: return "Invalid operation";
-    case GL_STACK_OVERFLOW:    return "Stack overflow";   
-    case GL_STACK_UNDERFLOW:   return "Stack underflow";  
-    case GL_OUT_OF_MEMORY:     return "Out of memory";    
-    default:                   return "Unknown error";    
-    }                                                                                          
+    case GL_STACK_OVERFLOW:    return "Stack overflow";
+    case GL_STACK_UNDERFLOW:   return "Stack underflow";
+    case GL_OUT_OF_MEMORY:     return "Out of memory";
+    default:                   return "Unknown error";
+    }
   }
   bool CheckGLError(std::string msg){
     bool error = false;
@@ -68,7 +68,7 @@ namespace superpunto{
   }
 
 
-  bool VBO::initmem(GLenum type, GLbitfield flags, GLsizeiptr size, const void *data){    
+  bool VBO::initmem(GLenum type, GLbitfield flags, GLsizeiptr size, const void *data){
     glBufferStorage(type, size, data, flags);
     return true;
   }
@@ -129,7 +129,7 @@ namespace superpunto{
     }
     glCreateTextures(tp, 1, &tid);
     glBindTextureUnit(unit, tid);
-    glTextureStorage2D(tid, 1, format[0], size.x, size.y); //Immutable size  
+    glTextureStorage2D(tid, 1, format[0], size.x, size.y); //Immutable size
     //glClearTexSubImage(tid, 0, 0,0,0, size.x,size.y,1, format[1], format[2], 0);
     glTextureParameteri(tid, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTextureParameteri(tid, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -169,7 +169,7 @@ namespace superpunto{
     fheight(resolution.y){
 
     tp = GL_FRAMEBUFFER;
-    glCreateFramebuffers(1, &fid);  
+    glCreateFramebuffers(1, &fid);
     sys->log<System::DEBUG>("Init FBO with id %d", fid);
     CheckGLError("Error at FBO creation");
     //Rendering textures/buffers
@@ -177,7 +177,7 @@ namespace superpunto{
     draw_buffer[0] = GL_COLOR_ATTACHMENT0;
     //Color  texture
 
-    ctex.init(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, glm::vec2(fwidth, fheight)); 
+    ctex.init(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, glm::vec2(fwidth, fheight));
 
     glNamedFramebufferTexture(fid, draw_buffer[0], ctex, 0);
 
@@ -189,11 +189,11 @@ namespace superpunto{
 
     pr.init(shs, 2);
     pr.setFlag("ctex", ctex.getUnit());
-    
+
   }
 
   void FBO::setFormat(GLenum ifmt, GLenum efmt, GLenum dtp){
-    ctex.init(ifmt, efmt, dtp, {fwidth, fheight}); 
+    ctex.init(ifmt, efmt, dtp, {fwidth, fheight});
     glNamedFramebufferTexture(fid, draw_buffer[0], ctex, 0);
   }
 
@@ -224,13 +224,13 @@ namespace superpunto{
   }
 
   Uint8* FBO::getColorData(){
-    int cdatasize = ctex.getSize().x*ctex.getSize().y*4;  
+    int cdatasize = ctex.getSize().x*ctex.getSize().y*4;
     if(cdata.size() != cdatasize) cdata.resize(cdatasize);
-  
+
     glBindFramebuffer(GL_READ_FRAMEBUFFER, fid);
     glReadPixels(0,0, fwidth, fheight, GL_RGBA, GL_UNSIGNED_BYTE, (void *)cdata.data());
     glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-  
+
     // std::fill(cdata.begin(), cdata.end(), 0);
     // fori(0,FWIDTH*FHEIGHT) cdata[4*i+3] = 255;
     // fori(0,FWIDTH*FHEIGHT) cdata[4*i] = 255;
@@ -246,7 +246,7 @@ namespace superpunto{
   }
 
   void FBO::bindColorTex(RShaderProgram &apr){
-    apr.setFlag("ctex"    , ctex.getUnit()); 
+    apr.setFlag("ctex"    , ctex.getUnit());
   }
 
   GBuffer::~GBuffer(){
@@ -269,7 +269,7 @@ namespace superpunto{
     glNamedFramebufferTexture(fid, draw_buffer[1], normdtex, 0);
 
     //Position texture for deferred shading
-    ptex.init(GL_RGB16F, GL_RGB, GL_FLOAT, resolution); 
+    ptex.init(GL_RGB16F, GL_RGB, GL_FLOAT, resolution);
     glNamedFramebufferTexture(fid, draw_buffer[2], ptex, 0);
 
     glNamedFramebufferDrawBuffers(fid, 3, draw_buffer.data());
@@ -280,22 +280,22 @@ namespace superpunto{
     auto randEsp = [](){return rand()/(float)RAND_MAX;};
     fori(0,16){
       noise[i] = glm::vec3(randEsp()*2.0-1.0f, randEsp()*2.0-1.0f, 0.0f);
-    } 
+    }
     noisetex.upload((void *) noise);
     glTextureParameteri(noisetex, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTextureParameteri(noisetex, GL_TEXTURE_WRAP_T, GL_REPEAT);  
+    glTextureParameteri(noisetex, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
     //glCheckNamedFrameBufferStatus(fid);
   }
 
 
   float* GBuffer::getDepthData(){
-    int ddatasize = dtex.getSize().x*dtex.getSize().y;  
+    int ddatasize = dtex.getSize().x*dtex.getSize().y;
     if(ddata.size() != ddatasize) ddata.resize(ddatasize);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, fid);
     glReadPixels(0,0, fwidth, fheight, GL_DEPTH_COMPONENT, GL_FLOAT, (void *)ddata.data());
     // ddata2.resize(ddatasize*4);
-    // fori(0,ddatasize){ 
+    // fori(0,ddatasize){
     //   ddata2[4*i] = int(255*ddata[i]);
     //   ddata2[4*i+1] = int(255*ddata[i]);
     //   ddata2[4*i+2] = int(255*ddata[i]);
@@ -306,7 +306,7 @@ namespace superpunto{
   }
 
   void GBuffer::handle_resize(int new_fwidth, int new_fheight){
-    
+
     FBO::handle_resize(new_fwidth, new_fheight);
     normdtex.resize(fwidth, fheight);
     glNamedFramebufferTexture(fid, draw_buffer[1], normdtex, 0);
@@ -317,11 +317,11 @@ namespace superpunto{
   }
 
   void GBuffer::bindSamplers(RShaderProgram &apr){
-    apr.setFlag("ctex"    , ctex.getUnit());     
-    apr.setFlag("dtex"    , dtex.getUnit());     
-    apr.setFlag("ndtex"   , normdtex.getUnit()); 
-    apr.setFlag("ptex"    , ptex.getUnit());     
-    apr.setFlag("noisetex", noisetex.getUnit()); 
+    apr.setFlag("ctex"    , ctex.getUnit());
+    apr.setFlag("dtex"    , dtex.getUnit());
+    apr.setFlag("ndtex"   , normdtex.getUnit());
+    apr.setFlag("ptex"    , ptex.getUnit());
+    apr.setFlag("noisetex", noisetex.getUnit());
   }
 
   RShader::RShader(){}
@@ -348,7 +348,7 @@ namespace superpunto{
     if (bufflen > 1){
       std::vector<GLchar> log_string(bufflen + 1);
       glGetShaderInfoLog(sid, bufflen, 0, log_string.data());
-      //printf("%s\n", log_string);   
+      //printf("%s\n", log_string);
     }
 
     return true;
@@ -386,7 +386,7 @@ namespace superpunto{
 
 
 
-  RGLContext::RGLContext(std::shared_ptr<System> sys, SDL_Window *w):sys(sys){    
+  RGLContext::RGLContext(std::shared_ptr<System> sys, SDL_Window *w):sys(sys){
     sys->log<System::DEBUG>("[RGLContext] Initialized");
     init(w);
   }
@@ -417,18 +417,18 @@ namespace superpunto{
     glGetIntegerv(GL_MINOR_VERSION, &minor);
 
     sys->log<System::MESSAGE>("OpenGL version %d.%d available", major, minor);
-  
+
     // glEnable(GL_BLEND);
     // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
- 
+
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
-    //glEnable(GL_FRAMEBUFFER_SRGB); 
-    glEnable(GL_MULTISAMPLE);
-    glEnable(GL_LINE_SMOOTH);
-    glEnable(GL_POLYGON_SMOOTH);
-   
+    //glEnable(GL_FRAMEBUFFER_SRGB);
+    //glEnable(GL_MULTISAMPLE);
+    //glEnable(GL_LINE_SMOOTH);
+    //glEnable(GL_POLYGON_SMOOTH);
+
   }
 
 
